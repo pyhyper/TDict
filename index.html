@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Selection Translator — Bôi đen để dịch</title>
+<style>
+  *{box-sizing:border-box}body{margin:0;background:#f6f8f5;color:#213e40;font:16px/1.7 system-ui,sans-serif}main{max-width:850px;margin:70px auto;padding:24px}small{color:#007d71;font-weight:700;letter-spacing:2px}h1{font-size:clamp(36px,6vw,60px);line-height:1.12;letter-spacing:-2px;margin:18px 0}p{color:#5c6f70}.pill{display:inline-block;background:#dcefe7;border-radius:24px;padding:5px 14px;font-size:13px}article{background:white;border:1px solid #dce5df;border-radius:24px;padding:clamp(24px,5vw,44px);margin-top:32px;box-shadow:0 18px 60px #1c594509}article p{color:#294747;font:23px/1.9 Georgia,serif}h2{font-size:13px;text-transform:uppercase;letter-spacing:2px;color:#78918a}::selection{background:#b4ead8}footer{margin-top:24px;color:#738380;font-size:13px}textarea{width:100%;padding:12px;border:1px solid #d5e0db;border-radius:10px;font:inherit}
+</style>
+<main>
+  <div id="sqlite-warning-banner" style="display:none;background:#fff4e5;border:1px solid #ffd8a8;color:#d9480f;padding:14px 18px;border-radius:12px;margin-bottom:20px;font-size:14px;line-height:1.6;">
+    <strong>⚠️ Máy chủ SQLite chưa kết nối:</strong> <span id="sqlite-warning-detail">Trình duyệt không thể gọi API tra từ điển qua giao thức hiện tại.</span><br>
+    👉 <strong>Cách bật ngay:</strong> Mở Terminal tại thư mục này và chạy lệnh:
+    <code style="background:#ffe8cc;padding:2px 8px;border-radius:6px;font-weight:600;display:inline-block;margin-top:4px;">php -S localhost:8080</code>
+    rồi mở trình duyệt vào <a href="http://localhost:8080" style="color:#d9480f;font-weight:bold;text-decoration:underline;">http://localhost:8080</a>.
+  </div>
+  <small>SELECTION TRANSLATOR</small>
+  <h1>Đọc liền mạch.<br>Hiểu từng từ.</h1>
+  <p>Bôi đen một từ hoặc câu tiếng Anh bên dưới để xem bản dịch tiếng Việt ngay tại chỗ.</p>
+  <span class="pill" id="status-pill">Đang kiểm tra kết nối SQLite…</span>
+  <article id="reading">
+    <h2>Thử “resilient”, “algorithm” hoặc cả câu</h2>
+    <p>A resilient person keeps learning. An algorithm can help us solve a difficult problem. When we learn a new language, we discover a different way of seeing the world.</p>
+    <p>A small step every day can make a big difference. Keep reading, keep exploring, and enjoy the journey.</p>
+  </article>
+  <footer>Ưu tiên từ điển TDict: IPA, CEFR, ví dụ và từ đồng nghĩa. Nếu không có mục từ hoặc từ điển tạm lỗi, văn bản được gửi tới MyMemory để dịch. Nhấn Esc hoặc chạm bên ngoài để đóng.</footer>
+</main>
+<script src="./selection-translator.js"></script>
+<script>
+  // Khởi tạo component cực đơn giản (tự động nhận diện API, source='en', target='vi')
+  window.translator = new SelectionTranslator({ root: '#reading' });
+
+  // Kiểm tra tình trạng kết nối SQLite
+  (async function checkSqliteHealth() {
+    const banner = document.getElementById('sqlite-warning-banner');
+    const bannerDetail = document.getElementById('sqlite-warning-detail');
+    const pill = document.getElementById('status-pill');
+
+    if (window.location.protocol === 'file:') {
+      if (banner) banner.style.display = 'block';
+      if (bannerDetail) bannerDetail.textContent = 'Bạn đang mở trực tiếp file HTML (file://). Trình duyệt chặn gọi file PHP cục bộ.';
+      if (pill) {
+        pill.textContent = '⚠️ Đang mở file:// (Chưa có PHP)';
+        pill.style.background = '#ffe3e3';
+        pill.style.color = '#c92a2a';
+      }
+      return;
+    }
+
+    try {
+      const res = await fetch('./api/lookup.php?check=1');
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (data.status === 'ok' && data.can_connect) {
+        if (pill) {
+          pill.textContent = `🟢 TDict sẵn sàng (${data.word_count.toLocaleString()} từ) · MyMemory dự phòng`;
+          pill.style.background = '#dcefe7';
+          pill.style.color = '#0b6b55';
+        }
+      } else {
+        throw new Error(data.error_detail || 'Không thể mở database');
+      }
+    } catch (err) {
+      if (banner) banner.style.display = 'block';
+      if (bannerDetail) bannerDetail.textContent = 'Không kết nối được API SQLite (' + err.message + '). Nếu bạn dùng Live Server hoặc server tĩnh, hãy chuyển sang dùng máy chủ PHP.';
+      if (pill) {
+        pill.textContent = '⚠️ TDict tạm lỗi (Dùng tạm MyMemory)';
+        pill.style.background = '#fff3bf';
+        pill.style.color = '#d9480f';
+      }
+    }
+  })();
+</script>
+</html>

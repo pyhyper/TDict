@@ -1,0 +1,27 @@
+{
+  "name": "tdict",
+  "version": "1.0.0",
+  "description": "TDict — Lightweight Selection Translator & Vocabulary Component for AI Learning & Web Integration",
+  "main": "selection-translator.js",
+  "scripts": {
+    "dev": "php -S localhost:8080",
+    "start": "php -S localhost:8080",
+    "test": "node tests/hybrid.cjs && node tests/audio.cjs"
+  },
+  "keywords": [
+    "translator",
+    "selection-translator",
+    "dictionary",
+    "sqlite",
+    "ai-learning",
+    "web-component",
+    "inline-lookup",
+    "reading-assistant"
+  ],
+  "author": "pyhyper",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/pyhyper/TDict.git"
+  }
+}
